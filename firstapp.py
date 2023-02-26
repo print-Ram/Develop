@@ -18,26 +18,27 @@ for company in config['COMPANIES']:
     data = yf.download(ticker)
     data_dict[company] = data
 
-# Create or connect to database and create finance_data table if it doesn't exist
+# Create or connect to database
 conn = sqlite3.connect(DB_FILE)
 c = conn.cursor()
 c.execute(f"CREATE TABLE IF NOT EXISTS {TABLE_NAME} (Company TEXT, Date TEXT, Open REAL, High REAL, Low REAL, Close REAL, Volume INTEGER, PRIMARY KEY (Company, Date))")
 
-# Insert or update finance data into finance_data table
+# Insert finance data into finance_data table
 for company in data_dict:
     data = data_dict[company]
     for index, row in data.iterrows():
         values = (company, str(index.date()), row['Open'], row['High'], row['Low'], row['Close'], row['Volume'])
         c.execute(f"INSERT OR REPLACE INTO {TABLE_NAME} VALUES (?, ?, ?, ?, ?, ?, ?)", values)
 
-# Commit changes and close database connection
+# Commit changes and close the database connection
 conn.commit()
 conn.close()
 
 app = Flask(__name__)
 
 
-# API to get all companies' stock data for a particular day
+# End Point to get all companies' stock data for a particular day
+
 @app.route('/stocks/<date>', methods=['GET'])
 def get_all_stocks_by_date(date):
     conn = sqlite3.connect(DB_FILE)
@@ -64,7 +65,8 @@ def get_all_stocks_by_date(date):
 
     return jsonify(data), 200
 
-# API to get all stock data for a particular company for a particular day
+# End Point to get all stock data for a particular company for a particular day
+
 @app.route('/stocks/<company>/<date>', methods=['GET'])
 def get_company_stocks_by_date(company, date):
     conn = sqlite3.connect(DB_FILE)
@@ -88,7 +90,7 @@ def get_company_stocks_by_date(company, date):
 
     return jsonify(stock_data), 200
 
-# API to get all stock data for a particular company
+# End point to get all stock data for a particular company
 @app.route('/stocks/:<company>', methods=['GET'])
 def get_company_stocks(company):
     conn = sqlite3.connect(DB_FILE)
@@ -116,7 +118,7 @@ def get_company_stocks(company):
     return jsonify(data), 200
 
 
-# API to update stock data for a company by date
+# End point to update stock data for a company by date
 @app.route('/stocks/<company>/<date>', methods=['POST'])
 def update_company_stocks_by_date(company, date):
     # Get request data
